@@ -77,9 +77,11 @@ typedef struct SlotMap {
 /// return: void
 /////////////////////////////////////////////////////////////////////////////
 void SlotMap_init(SlotMap* slot_ref, size_t count, size_t size) {
+    // size indicator
     slot_ref->Data_cap  = count;
     slot_ref->Data_len  = 0;
     slot_ref->Index_len = 0; // starts at 0 but allocates when about to use
+    // arrays
     slot_ref->Data      = malloc(count * size);
     slot_ref->Index     = NULL;
     slot_ref->ID        = (typeof(slot_ref->ID))malloc(sizeof(slot_ref->ID) * size);
