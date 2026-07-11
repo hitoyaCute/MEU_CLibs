@@ -1,7 +1,15 @@
 // vim: ft=c
-/* Linear search powered map
- *
- * */
+/***********************************************************************
+type of map where we use linear search
+
+how to use
+
+// first create a type
+LINEARMAP_TYPE(const char*, float) char_float_map;     // create key_value pair
+LINEARMAP_NAME_TYPE(const char*, int, char_int_map) d; // create the type and specify typename
+
+
+***********************************************************************/
 
 #ifndef INCLUDE_MAP_HASHMAP_H_
 #define INCLUDE_MAP_HASHMAP_H_
@@ -11,7 +19,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <MEU_CLib/UTILS/UTILS.h>
+
+#define OR ||
+#define AND &&
+#define NOT !
 
 #ifndef MAP_INIT_SIZE
 #define MAP_INIT_SIZE 16
@@ -31,10 +42,10 @@ typedef struct linearmap_header_impl {
 /////////////////////////////////////////////////////////////////////////////
 /// cast map_ref to header*
 /////////////////////////////////////////////////////////////////////////////
-#define _to_Lmap_header(map_ref) (((linearmap_header*)(map_ref)) - 1)
+#define _to_Lmap_header(map_ref) ((linearmap_header*)(map_ref) - 1)
 
 /////////////////////////////////////////////////////////////////////////////
-/// count till the last element
+/// number of elements
 /////////////////////////////////////////////////////////////////////////////
 #define LinearMap_len(map_ref) (_to_Lmap_header((map_ref))->last_elem_idx)
 
@@ -84,6 +95,7 @@ typedef struct linearmap_header_impl {
     if ((map_ref) != NULL) break;                                               \
     /* cast the map_ref to header type and put necesary header data*/           \
     linearmap_header* header ;                                                  \
+    /*         cast to header         sizeof type mul size plus size of header*/\
     header = (typeof(header))malloc(sizeof(*map_ref) * size + sizeof(*header)); \
     header->count = 0;                                                          \
     header->capacity = size;                                                    \
@@ -94,7 +106,7 @@ typedef struct linearmap_header_impl {
 
 
 /////////////////////////////////////////////////////////////////////////////
-/// push a new key,elemement pair to the array at its end aka array[.last_elem_idx+1]
+/// push a new key,elemement pair to the array at its end aka array[.last_elem_idx]
 /////////////////////////////////////////////////////////////////////////////
 #define LinearMap_appendElem(map_ref, _key, _elem) do {            \
     if ((map_ref) == NULL) LinearMap_init(map_ref, MAP_INIT_SIZE); \
@@ -108,40 +120,40 @@ typedef struct linearmap_header_impl {
 /////////////////////////////////////////////////////////////////////////////
 /// check if given key is available and return its index, else return -1
 /////////////////////////////////////////////////////////////////////////////
-#define _LinearMap_find(map_ref, KEY) ({    \
-    assert(map_ref != NULL && "used _LinearMap_find with NULL\n");\
-    size_t idx = 0; /* return value */      \
-    /* search for `map_ref`*/               \
-    size_t len = LinearMap_len((map_ref));  \
-    for (;                                  \
-        idx < len AND NOT _special_compare( \
-           (map_ref),                       \
-           idx,                             \
-           (KEY)                            \
-        );                                  \
-        idx++                               \
-    );                                      \
-    idx == (len - 1) ? -1 : idx;            \
+#define _LinearMap_find(map_ref, KEY) ({                           \
+    assert(map_ref != NULL && "used _LinearMap_find with NULL\n"); \
+    size_t idx = 0; /* return value */                             \
+    /* search for `map_ref`*/                                      \
+    size_t len = LinearMap_len((map_ref));                         \
+    for (;                                                         \
+        idx < len AND NOT _special_compare(                        \
+           (map_ref),                                              \
+           idx,                                                    \
+           (KEY)                                                   \
+        );                                                         \
+        idx++                                                      \
+    );                                                             \
+    idx == (len - 1) ? -1 : idx;                                   \
 })
 
 /////////////////////////////////////////////////////////////////////////////
 /// search for free slot and return the first usable slot, if non found reurn -1
 /////////////////////////////////////////////////////////////////////////////
-#define _LinearMap_findFree(map_ref) ({                 \
-    assert(map_ref != NULL && "used _LinearMap_findFree with NULL\n");\
-    size_t idx = 0;                                     \
-    typeof((map_ref)->key) blank{};                     \
-    size_t len = LinearMap_len((map_ref));              \
-    for (;                                              \
-        idx < len AND NOT _special_compare(             \
-            (map_ref),                                  \
-            idx,                                        \
-            blank /* empty contructor*/                 \
-        );                                              \
-        idx++                                           \
-    );                                                  \
-    /* if the key on idx is empty return idx else -1 */ \
-    _special_compare((map_ref), idx, blank) ? idx : -1; \
+#define _LinearMap_findFree(map_ref) ({                                \
+    assert(map_ref != NULL && "used _LinearMap_findFree with NULL\n"); \
+    size_t idx = 0;                                                    \
+    typeof((map_ref)->key) blank;                                      \
+    size_t len = LinearMap_len((map_ref));                             \
+    for (;                                                             \
+        idx < len AND NOT _special_compare(                            \
+            (map_ref),                                                 \
+            idx,                                                       \
+            blank /* empty contructor*/                                \
+        );                                                             \
+        idx++                                                          \
+    );                                                                 \
+    /* if the key on idx is empty return idx else -1 */                \
+    _special_compare((map_ref), idx, blank) ? idx : -1;                \
 })
 
 /////////////////////////////////////////////////////////////////////////////
@@ -167,10 +179,7 @@ typedef struct linearmap_header_impl {
 } while(0)
 
 
-#ifdef _LIB_TEST
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-static int mai() {
+static void _internal_testing_LinearMap_kyjh4imfqvni2hc40ftgctvqbgdmop7ghk5whux1rvoddy313u() {
     // const char*
     typedef const char* c_string;
     LINEARMAP_NAME_TYPE(const char*, const char*, char_map) d;
@@ -187,14 +196,10 @@ static int mai() {
         d,
         _key,
         _elem);
-    for (int i = 0; i < 3; i++){
+    for (int i = 0; i < 3; i++) {
         char d[] = "123456789";
         printf("meh %.*s\n",1,d);
     }
-
-    return EXIT_SUCCESS;
 }
-#endif 
-
 
 #endif  // INCLUDE_MAP_HASHMAP_H_
