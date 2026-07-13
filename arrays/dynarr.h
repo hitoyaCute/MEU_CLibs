@@ -152,6 +152,11 @@ typedef struct dynarr_header_impl{
 #define dynarr_first(arr_ref) (arr_ref)
 
 /////////////////////////////////////////////////////////////////////////////
+/// clear the array but not deallocate
+/////////////////////////////////////////////////////////////////////////////
+#define dynarr_clear(arr_ref) do{_to_dynarr_header((arr_ref))->count = 0;} while(0)
+
+/////////////////////////////////////////////////////////////////////////////
 /// free the array and reset the reference to it
 /////////////////////////////////////////////////////////////////////////////
 #define dynarr_free(arr_ref) do {       \
@@ -242,6 +247,7 @@ static void _internal_testing_dynarr_kkzq4x33mqvn3ubpcfm1qhcipys0k5t9szsm9uicr5z
         printf(" success=%d\n",(int)dynarr_ncmp(s, test_data, sizeof(test_data)/sizeof(*test_data)));
 
     }
+    dynarr_clear(s);
     dynarr_free(s);
 
     printf("============== DONE TESTING dynarr =================\n");

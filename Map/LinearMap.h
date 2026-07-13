@@ -52,23 +52,23 @@ typedef struct linearmap_header_impl {
 /////////////////////////////////////////////////////////////////////////////
 /// compare 2 data depending on each type perform special case, return 1 if same, else 0
 /////////////////////////////////////////////////////////////////////////////
-#define _special_compare(map_ref, idx, KEY2) ({           \
-    /* first check if theres a user defined function*/    \
-    typeof(KEY2) KEY1 = (map_ref)[idx].key;               \
-    int res = 0;                                          \
-    if (_to_Lmap_header(map_ref)->compare_func != NULL)   \
-        res = _to_Lmap_header(map_ref)->compare_func(     \
-                (void*)&KEY1,                             \
-                (void*)&(KEY2)                            \
-        );                                                \
-    else {                                                \
-        res = _Generic(1? (KEY1) : (KEY2),                \
-            char*:       (strcmp(KEY1, (KEY2)) == 0),     \
-            const char*: (strcmp(KEY1, (KEY2)) == 0),     \
-            default: (KEY1 == (KEY2))                     \
-        );                                                \
-    }                                                     \
-    res;                                                  \
+#define _LINEARMAP_special_compare(map_ref, idx, KEY2) ({         \
+    /* first check if theres a user defined function */ \
+    typeof(KEY2) KEY1 = (map_ref)[idx].key;             \
+    int res = 0;                                        \
+    if (_to_Lmap_header(map_ref)->compare_func != NULL) \
+        res = _to_Lmap_header(map_ref)->compare_func(   \
+                (void*)&KEY1,                           \
+                (void*)&(KEY2)                          \
+        );                                              \
+    else {                                              \
+        res = _Generic(1? (KEY1) : (KEY2),              \
+            char*:       (strcmp(KEY1, (KEY2)) == 0),   \
+            const char*: (strcmp(KEY1, (KEY2)) == 0),   \
+            default: (KEY1 == (KEY2))                   \
+        );                                              \
+    }                                                   \
+    res;                                                \
 })
 
 #define LINEAR_MAP_ELEM(Key_T, Value_T) { \
@@ -95,7 +95,7 @@ typedef struct linearmap_header_impl {
     if ((map_ref) != NULL) break;                                               \
     /* cast the map_ref to header type and put necesary header data*/           \
     linearmap_header* header ;                                                  \
-    /*         cast to header         sizeof type mul size plus size of header*/\
+    /*        cast to header         sizeof type mul size plus size of header */\
     header = (typeof(header))malloc(sizeof(*map_ref) * size + sizeof(*header)); \
     header->count = 0;                                                          \
     header->capacity = size;                                                    \
@@ -106,13 +106,24 @@ typedef struct linearmap_header_impl {
 
 
 /////////////////////////////////////////////////////////////////////////////
-/// push a new key,elemement pair to the array at its end aka array[.last_elem_idx]
+/// DO NOT USE push a new key,elemement pair to the array at its end aka array[.last_elem_idx]
 /////////////////////////////////////////////////////////////////////////////
-#define LinearMap_appendElem(map_ref, _key, _elem) do {            \
-    if ((map_ref) == NULL) LinearMap_init(map_ref, MAP_INIT_SIZE); \
-    linearmap_header* header = _to_Lmap_header(map_ref);\
-    /* malke sure theres enouch space */\
-    if (header->last_elem_idx >= header->capacity) {}\
+#define _LinearMap_appendElem(map_ref, _key, _elem) do {                                                      \
+    if ((map_ref) == NULL) LinearMap_init(map_ref, MAP_INIT_SIZE);                                            \
+    linearmap_header* header = _to_Lmap_header(map_ref);                                                      \
+    /* malke sure theres enouch space */                                                                      \
+    if (header->last_elem_idx >= header->capacity) {                                                          \
+        int size = header->capacity *= 1.5;                                                                   \
+        linearmap_header* temp = (typeof(temp))realloc((map_ref), sizeof(*(map_ref)) * size + sizeof(*temp)); \
+        if (!temp) {                                                                                          \
+            fprintf(stderr, "unable to reallocate memory for LinearMap_appendElem\n");exit(-1);               \
+        }                                                                                                     \
+        /* update the header and map_ref incase it reallocates */                                             \
+        header = temp;                                                                                        \
+        (map_ref) = (typeof(map_ref))(header + 1);                                                            \
+    }                                                                                                         \
+    /* append the new ellement */                                                                             \
+    (map_ref)[header->count] = (typeof(*(map_ref))){_key,_elem}; header->count++;                             \
 } while(0)
 
 #define LinearMap_setCmpFunc(map_ref, FUNC) (_to_Lmap_header((map_ref))->compare_func = (FUNC))
@@ -120,13 +131,13 @@ typedef struct linearmap_header_impl {
 /////////////////////////////////////////////////////////////////////////////
 /// check if given key is available and return its index, else return -1
 /////////////////////////////////////////////////////////////////////////////
-#define _LinearMap_find(map_ref, KEY) ({                           \
+#define LinearMap_find(map_ref, KEY) ({                            \
     assert(map_ref != NULL && "used _LinearMap_find with NULL\n"); \
     size_t idx = 0; /* return value */                             \
     /* search for `map_ref`*/                                      \
     size_t len = LinearMap_len((map_ref));                         \
     for (;                                                         \
-        idx < len AND NOT _special_compare(                        \
+        idx < len AND NOT _LINEARMAP_special_compare(              \
            (map_ref),                                              \
            idx,                                                    \
            (KEY)                                                   \
@@ -145,7 +156,7 @@ typedef struct linearmap_header_impl {
     typeof((map_ref)->key) blank;                                      \
     size_t len = LinearMap_len((map_ref));                             \
     for (;                                                             \
-        idx < len AND NOT _special_compare(                            \
+        idx < len AND NOT _LINEARMAP_special_compare(                  \
             (map_ref),                                                 \
             idx,                                                       \
             blank /* empty contructor*/                                \
@@ -153,7 +164,7 @@ typedef struct linearmap_header_impl {
         idx++                                                          \
     );                                                                 \
     /* if the key on idx is empty return idx else -1 */                \
-    _special_compare((map_ref), idx, blank) ? idx : -1;                \
+    _LINEARMAP_special_compare((map_ref), idx, blank) ? idx : -1;      \
 })
 
 /////////////////////////////////////////////////////////////////////////////
@@ -162,7 +173,7 @@ typedef struct linearmap_header_impl {
 #define LinearMap_set(map_ref, _key, _elem) do {       \
     assert(map_ref != NULL && "used LinearMap_set with NULL\n");\
     /* first check if the key is alrealy set*/         \
-    size_t found = _LinearMap_find((map_ref), (_key)); \
+    size_t found = LinearMap_find((map_ref), (_key));  \
     /* if found set _elem to that index*/              \
     if (found != -1) {                                 \
         (map_ref)[found].value = (_elem); break;       \
@@ -175,31 +186,42 @@ typedef struct linearmap_header_impl {
         break;                                         \
     }                                                  \
     /* if no free space make one*/                     \
-    LinearMap_appendElem((map_ref),(_key),(_elem));    \
+    _LinearMap_appendElem((map_ref),(_key),(_elem));   \
 } while(0)
 
 
+#define LinearMap_get(map_ref, _key, _elem) do {       \
+    assert(map_ref != NULL && "used LinearMap_get with NULL\n");\
+    /* first check if the key is alrealy set*/         \
+    size_t found = LinearMap_find((map_ref), (_key));  \
+    /* if found set _elem to that index*/              \
+    if (found != -1) {                                 \
+        (map_ref)[found].value = (_elem); break;       \
+    }                                                  \
+    /* else check for empty slot and put there*/       \
+    found = _LinearMap_findFree((map_ref));            \
+    if (found != -1) {                                 \
+        (_elem) = (map_ref)[found].value;              \
+        break;                                         \
+    }                                                  \
+    /* if no free space make one*/                     \
+    _LinearMap_appendElem((map_ref),(_key),(_elem));   \
+} while(0) 
+
+
 static void _internal_testing_LinearMap_kyjh4imfqvni2hc40ftgctvqbgdmop7ghk5whux1rvoddy313u() {
-    // const char*
-    typedef const char* c_string;
-    LINEARMAP_NAME_TYPE(const char*, const char*, char_map) d;
-    LinearMap_init(d, 64);
-    LinearMap_setCmpFunc(d, 0);
+    printf("============== STARTED TESTING LinearMap =================\n");
+    LINEARMAP_NAME_TYPE(const char*, int, char_int_map) map;
+    LinearMap_init(map, 10);
+    {
+        const char* d = "32";
+        LinearMap_set(map, d, 32);
 
-    c_string _key = "2", _elem ="meh";
-
-    int qq = _Generic(_key, int:2, char*: _elem, default:0);
-
-    qq = _LinearMap_find(d, _elem);
-    qq = _special_compare(d, 2, _key);
-    LinearMap_set(
-        d,
-        _key,
-        _elem);
-    for (int i = 0; i < 3; i++) {
-        char d[] = "123456789";
-        printf("meh %.*s\n",1,d);
+        int data = 0;
+        LinearMap_get(map, d, data);
+        printf(">>> testing insert\n success=%d\n",data==32);
     }
+    printf("============== DONE TESTING LinearMap =================\n");
 }
 
-#endif  // INCLUDE_MAP_HASHMAP_H_
+#endif  // INCLUDE
