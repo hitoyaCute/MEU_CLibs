@@ -216,6 +216,7 @@ static void _internal_testing_LinearMap_kyjh4imfqvni2hc40ftgctvqbgdmop7ghk5whux1
     {
         const char* d = "32";
         LinearMap_set(map, d, 32);
+        printf("done setting...\n");
 
         int data = 0;
         LinearMap_get(map, d, data);
