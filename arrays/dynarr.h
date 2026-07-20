@@ -175,21 +175,21 @@ typedef struct dynarr_header_impl{
 ///
 /// \return 1 if the 2 array upto n'th element is same
 /////////////////////////////////////////////////////////////////////////////
-#define dynarr_ncmp(arr_ref1, arr_ref2, n) ({            \
-    int arr1_count = _to_dynarr_header(arr_ref1)->count; \
-    /* return 0 if n is larger than array*/              \
-    (n > arr1_count) ? 0 : ({                            \
-        /* else check if theres no difference */         \
-        int result = 1;                                  \
-        /* if found difference set false and break */    \
-        for (uint32_t i = 0; i < n; i++) {               \
-            if (arr_ref1[i] != arr_ref2[i]) {            \
-                result = 0;                              \
-                break;                                   \
-            }                                            \
-        };                                               \
-        result;                                          \
-    });                                                  \
+#define dynarr_ncmp(arr_ref1, arr_ref2, n) ({              \
+    int arr1_count = _to_dynarr_header((arr_ref1))->count; \
+    /* return 0 if n is larger than array*/                \
+    ((int)(n) > arr1_count) ? 0 : ({                       \
+        /* else check if theres no difference */           \
+        int result = 1;                                    \
+        /* if found difference set false and break */      \
+        for (uint32_t i = 0; i < (n); i++) {               \
+            if ((arr_ref1)[i] != (arr_ref2)[i]) {          \
+                result = 0;                                \
+                break;                                     \
+            }                                              \
+        };                                                 \
+        result;                                            \
+    });                                                    \
 })
 
 // just prints the data and header

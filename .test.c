@@ -8,7 +8,7 @@
 #include "Map/LinearMap.h"
 
 
-int main(int argc, char *argv[]) {
+int main(void) {
     // test dynarr
     _internal_testing_dynarr_kkzq4x33mqvn3ubpcfm1qhcipys0k5t9szsm9uicr5zdwqtzqd();
     _internal_testing_LinearMap_kyjh4imfqvni2hc40ftgctvqbgdmop7ghk5whux1rvoddy313u();
