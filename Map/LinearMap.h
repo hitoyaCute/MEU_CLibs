@@ -51,21 +51,21 @@ typedef struct linearmap_header_impl {
 /////////////////////////////////////////////////////////////////////////////
 /// compare 2 data depending on each type perform special case, return 1 if same, else 0
 /////////////////////////////////////////////////////////////////////////////
-#define _LINEARMAP_special_compare(compare_func, KEY1, KEY2) ({ \
-    int res = 0;                                                \
-    if (compare_func == NULL)                                   \
-        res = _Generic(1? (KEY1) : (KEY2),                      \
-            char*      : (strcmp((KEY1), (KEY2)) == 0),         \
-            const char*: (strcmp((KEY1), (KEY2)) == 0),         \
-            default    : ((KEY1) == (KEY2))                     \
-        );                                                      \
-    else {                                                      \
-        res = compare_func(                                     \
-                (void*)&(KEY1),                                 \
-                (void*)&(KEY2)                                  \
-        );                                                      \
-    }                                                           \
-    res;                                                        \
+#define _LINEARMAP_special_compare(compare_func, KEY1, KEY2) ({       \
+    int res = 0;                                                      \
+    if (compare_func == NULL)                                         \
+        res = _Generic(1? (KEY1) : (KEY2),                            \
+            char*      : (strcmp((char*)(KEY1), (char*)(KEY2)) == 0), \
+            const char*: (strcmp((char*)(KEY1), (char*)(KEY2)) == 0), \
+            default    : ((KEY1) == (KEY2))                           \
+        );                                                            \
+    else {                                                            \
+        res = compare_func(                                           \
+                (void*)&(KEY1),                                       \
+                (void*)&(KEY2)                                        \
+        );                                                            \
+    }                                                                 \
+    res;                                                              \
 })
 
 #define LINEAR_MAP_ELEM(Key_T, Value_T) { \
@@ -191,7 +191,7 @@ static void _internal_testing_LinearMap_kyjh4imfqvni2hc40ftgctvqbgdmop7ghk5whux1
         LinearMap_set(map, s, 30.3);
         printf("done setting... total len = %d\n", LinearMap_len(map));
 
-        int key = 67; // this dont exist why it giving 32
+        int key = 32;
         // LinearMap_get(map, key, data);
         int data  = LinearMap_find(map, key);
 

@@ -1,2 +1,2 @@
 CompileFlags:
-  Add: [-D_LIB_TEST]
+  Add: [-std=c17, -D_LIB_TEST, -x, c]
