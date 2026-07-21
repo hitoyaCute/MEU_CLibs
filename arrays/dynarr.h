@@ -69,7 +69,7 @@ typedef struct dynarr_header_impl{
     dynarr_header* header = (dynarr_header*)malloc(sizeof(*(arr_ref))* (size)+ sizeof(*header)); \
     header->count = 0;                                                                           \
     header->capacity = (size);                                                                   \
-    (arr_ref) = (typeof(arr_ref))(header + 1);                                                   \
+    (arr_ref) = (void*)(header + 1);                                                   \
 } while(0)
 
 /////////////////////////////////////////////////////////////////////////////
@@ -86,7 +86,7 @@ typedef struct dynarr_header_impl{
         }                                                                                                             \
         /* refresh the arr_ref to handle the case on which the realloc reallocated the array on different address*/   \
         header = temp;                                                                                                \
-        (arr_ref) = (typeof(arr_ref))(header + 1);                                                                    \
+        (arr_ref) = (void*)(header + 1);                                                                    \
     }                                                                                                                 \
     /* append and increasing the count*/                                                                              \
     (arr_ref)[header->count] = (element); header->count++;                                                            \
@@ -121,7 +121,7 @@ typedef struct dynarr_header_impl{
     }                                                                                                           \
     /* refresh the arr_ref to handle the case on which the realloc reallocated the array on different address*/ \
     header = temp;                                                                                              \
-    (arr_ref) = (typeof(arr_ref))(header + 1);                                                                  \
+    (arr_ref) = (void*)(header + 1);                                                                  \
 } while(0)
 
 /////////////////////////////////////////////////////////////////////////////
@@ -131,7 +131,7 @@ typedef struct dynarr_header_impl{
 /// \param other_arr the reference to the other array
 /////////////////////////////////////////////////////////////////////////////
 #define dynarr_extend(arr_ref, other) do {                \
-    uint other_count = _to_dynarr_header((other))->count; \
+    uint32_t other_count = _to_dynarr_header((other))->count; \
     /* copy yhe elements from the other to the arr_ef*/   \
     for (uint32_t i = 0; i < other_count; i++) {          \
         dynarr_append((arr_ref), (other)[i]);             \

@@ -20,6 +20,7 @@ LINEARMAP_NAME_TYPE(const char*, int, char_int_map) d; // create the type and sp
 #include <stdint.h>
 #include <string.h>
 
+
 #define OR ||
 #define AND &&
 #define NOT !
@@ -92,12 +93,12 @@ typedef struct linearmap_header_impl {
     /* cast the map_ref to header type and put necesary header data*/           \
     linearmap_header* header;                                                   \
     /*        cast to header         sizeof type mul size plus size of header */\
-    header = (typeof(header))malloc(sizeof(*map_ref) * size + sizeof(*header)); \
+    header = malloc(sizeof(*map_ref) * size + sizeof(*header)); \
     header->count = 0;                                                          \
     header->capacity = size;                                                    \
     header->compare_func = NULL;             /* set conpare function to null */ \
-    (map_ref) = (typeof(map_ref))(header + 1); /* [header][map_ref] */          \
-} while(0)
+    (map_ref) = (void*)(header + 1); /* [header][map_ref] */          \
+} while(0) 
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -108,17 +109,17 @@ typedef struct linearmap_header_impl {
     linearmap_header* header = _to_Lmap_header(map_ref);                                                      \
     /* malke sure theres enouch space */                                                                      \
     if (header->count >= header->capacity) {                                                                  \
-        int size = header->capacity *= 1.5;                                                                   \
-        linearmap_header* temp = (typeof(temp))realloc((map_ref), sizeof(*(map_ref)) * size + sizeof(*temp)); \
+        int size = header->capacity *= 2;                                                                     \
+        linearmap_header* temp = realloc(_to_Lmap_header((map_ref)), sizeof(*(map_ref)) * size + sizeof(*temp)); \
         if (!temp) {                                                                                          \
             fprintf(stderr, "unable to reallocate memory for LinearMap_appendElem\n");exit(-1);               \
         }                                                                                                     \
         /* update the header and map_ref incase it reallocates */                                             \
         header = temp;                                                                                        \
-        (map_ref) = (typeof(map_ref))(header + 1);                                                            \
+        (map_ref) = (void*)(header + 1);                                                                      \
     }                                                                                                         \
     /* append the new ellement */                                                                             \
-    (map_ref)[header->count] = (typeof(*(map_ref))){.key = (_key), .value = (_elem)};                         \
+    (map_ref)[header->count].key = (_key); (map_ref)[header->count].value = (_elem);                          \
     header->count++;                                                                                          \
 } while(0)
 
@@ -180,19 +181,19 @@ typedef struct linearmap_header_impl {
 
 static void _internal_testing_LinearMap_kyjh4imfqvni2hc40ftgctvqbgdmop7ghk5whux1rvoddy313u() {
     printf("============== STARTED TESTING LinearMap =================\n");
-    LINEARMAP_NAME_TYPE(const char*, int, char_int_map) map = NULL;
-    LinearMap_init(map, 1);
+    LINEARMAP_NAME_TYPE(int, float, int_float_map) map = NULL;
+    LinearMap_init(map, 1); // lsp is mad at me
     {
-        const char* d = "32", *s="meh";
-        LinearMap_set(map, d, 34);
+        int d = 32;
+        int s = 67;
+        LinearMap_set(map, d, 34.2);
         printf("done setting... total len = %d\n", LinearMap_len(map));
-        LinearMap_set(map, s, 30);
+        LinearMap_set(map, s, 30.3);
         printf("done setting... total len = %d\n", LinearMap_len(map));
 
-        const char* key = "32"; // this dont exist why it giving 32
+        int key = 67; // this dont exist why it giving 32
         // LinearMap_get(map, key, data);
         int data  = LinearMap_find(map, key);
-        data = _LINEARMAP_special_compare((int (*)(void*,void*)){NULL}, d, key);
 
         // data = _to_Lmap_header((map))->count; // why 0
         printf(">>> testing insert and get\n success=%d\n",data);
