@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
 cc -std=c23 ./.test.c -fsanitize=address -Wall -Wextra -Wno-int-to-pointer-cast -g3 -ggdb -O0 -o ./test && ./test
-
+# cc -std=c23 ./.test.c -fsanitize=address -Wall -Wextra -g3 -ggdb -O0 -o ./test && ./test

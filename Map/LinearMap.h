@@ -222,11 +222,14 @@ typedef struct linearmap_header_impl {
     (map_ref) = NULL;                 \
 } while(0)
 
+static int _internal_testing_LinearMap_CMPFUNC_INT_kyjh4imfqvni2hc40ftgctvqbgdmop7ghk5whux1rvoddy313u(void* a, void* b) {
+    return memcmp(a, b, sizeof(int)) == 0;
+}
+
 static void _internal_testing_LinearMap_kyjh4imfqvni2hc40ftgctvqbgdmop7ghk5whux1rvoddy313u() {
     printf("============== STARTED TESTING LinearMap =================\n");
     LINEARMAP_NAME_TYPE(int, float, int_float_map) map = NULL;
     LinearMap_init(map, 1);
-                            
     {
         int d = 32;
         int s = 67;
@@ -251,6 +254,38 @@ static void _internal_testing_LinearMap_kyjh4imfqvni2hc40ftgctvqbgdmop7ghk5whux1
         int res = LinearMap_find(map, key);
         printf(">>> testing find\n success=%d\n", res == 0);
     }
+    {
+        LINEARMAP_NAME_TYPE(int, float, int_float_map) map1 = NULL;
+        LinearMap_init(map1, 1);
+        LinearMap_setCmpFunc(map1, _internal_testing_LinearMap_CMPFUNC_INT_kyjh4imfqvni2hc40ftgctvqbgdmop7ghk5whux1rvoddy313u);
+        int result = 0;
+        {
+            int d = 32;
+            int s = 67;
+            LinearMap_set(map1, d, 34.2);
+            LinearMap_set(map1, s, 30.3);
+            result += LinearMap_len(map1) == 2;
+        }
+        {
+            int key = 67;
+            float data  = 0;
+            LinearMap_get(map1, key, data);
+            result += (data == 30.3f);
+        }
+        {
+            int key = 32;
+            LinearMap_remove(map1, key);
+            result += (LinearMap_find(map1, key) == (size_t)-1);
+        }
+        {
+            int key = 67;
+            int res = LinearMap_find(map1, key);
+            result += (res == 0);
+        }
+        printf(">>> testing all the test above with custom compare function\n success=%d\n", result == 4);
+        LinearMap_free(map1);
+    }
+
     printf("============== DONE TESTING LinearMap =================\n");
     LinearMap_free(map);
 }
